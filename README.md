@@ -1,0 +1,2 @@
+# ses
+sen senteleme çalışması
