@@ -137,7 +137,6 @@
 
     function updateLog(msg) { log.innerText = msg; }
 
-    // Varsayılan parametrelerle satır ekleme fonksiyonu
     function addOscRow(defaultFreq = 122, defaultVol = 80, defaultPan = 0, defaultType = 'sine') {
         const div = document.createElement('div');
         div.className = 'row';
@@ -200,13 +199,14 @@
         reader.readAsArrayBuffer(file);
     };
 
+    // YENİ Brickwall Limiter Ayarları
     function setupCompressor(context) {
         const comp = context.createDynamicsCompressor();
-        comp.threshold.value = -15; // Cızırtı önleyici daha erken tepki
-        comp.knee.value = 30;
-        comp.ratio.value = 15;
-        comp.attack.value = 0.002;
-        comp.release.value = 0.25;
+        comp.threshold.value = -24; // Çok daha erken devreye girer
+        comp.knee.value = 0;        // Keskin müdahale (Hard knee)
+        comp.ratio.value = 20;      // Tavanı aşan sesi maksimum oranda ezer (Brickwall)
+        comp.attack.value = 0.001;  // Saniyenin binde biri hızında anında tepki verir
+        comp.release.value = 0.1;   // Sesi hızlıca serbest bırakır
         return comp;
     }
 
@@ -232,9 +232,9 @@
             
             const compressor = setupCompressor(audioCtx);
             
-            // Cızırtı (Clipping) önleyici Master Gain
+            // YENİ: Master Gain Headroom Değeri Düşürüldü
             const masterGain = audioCtx.createGain();
-            masterGain.gain.value = 0.45; // Toplam gücü düşürerek bozulmayı engeller
+            masterGain.gain.value = 0.25; // 0.45'ten 0.25'e düşürüldü. Toplam sinyal için devasa bir alan açıldı.
             
             masterGain.connect(compressor);
             compressor.connect(analyser);
@@ -258,7 +258,7 @@
 
                 osc.connect(gainNode);
                 gainNode.connect(pannerNode);
-                pannerNode.connect(masterGain); // Doğrudan master'a bağlanır
+                pannerNode.connect(masterGain); 
                 
                 osc.start();
                 activeSources.push(osc);
@@ -274,7 +274,7 @@
                 fileSlider.gainNode = fileGain;
 
                 source.connect(fileGain);
-                fileGain.connect(masterGain); // Arka plan müziği de master'a bağlanır
+                fileGain.connect(masterGain); 
                 source.start();
                 activeSources.push(source);
             }
@@ -342,7 +342,6 @@
 
     async function downloadMP3() {
         try {
-            // UI'ın güncellenmesi için ufak bir bekleme (Donmayı engeller)
             updateLog("Yüksek Kalitede MP3 İşleniyor, lütfen bekleyin...");
             await new Promise(resolve => setTimeout(resolve, 100));
 
@@ -354,7 +353,7 @@
             const compressor = setupCompressor(offlineCtx);
             
             const masterGain = offlineCtx.createGain();
-            masterGain.gain.value = 0.45; // Çevrimdışı render için de clipping önleyici eklendi
+            masterGain.gain.value = 0.25; // Çevrimdışı render için de değer düşürüldü
             
             masterGain.connect(compressor);
             compressor.connect(offlineCtx.destination);
@@ -393,7 +392,6 @@
 
             const renderedBuffer = await offlineCtx.startRendering();
             
-            // MP3 Kalitesi 128'den 320 kbps'ye (En Yüksek Kalite) yükseltildi.
             const mp3encoder = new lamejs.Mp3Encoder(2, sampleRate, 320);
             const mp3Data = [];
             const sampleBlockSize = 576;
