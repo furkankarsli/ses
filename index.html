@@ -49,28 +49,19 @@
 <div class="card">
 
     <details class="guide">
-        <summary> Kullanım Rehberi ve Frekans Mantığı (tıklayın)</summary>
+        <summary>Kullanım Rehberi ve Frekans Mantığı</summary>
         <div class="guide-content">
-            <h4>Bu Sistem Ne İşe Yarar?</h4>
-            <p>Bu araç, farklı ses frekanslarını üst üste bindirerek günlük hayatınızı kolaylaştırmak; uykuya dalmak, odaklanmak, stresi azaltmak veya kendinize özel rahatlatıcı ses ortamları yaratmak için tasarlanmış bir frekans sentezleyicidir.</p>
+            <h4>Sistem İşlevi</h4>
+            <p>Bu araç, farklı ses frekanslarını üst üste bindirerek uykuya dalmak, odaklanmak veya rahatlatıcı ses ortamları yaratmak için tasarlanmış bir sentezleyicidir.</p>
             
-            <h4>121 - 122 Hz Mantığı Nasıl Çalışır?</h4>
-            <p>Sistemin en güçlü yanlarından biri frekansların birbiriyle olan fiziksel çarpışmasıdır. Örneğin; <strong>121 Hz</strong> ve <strong>122 Hz</strong> frekanslarını aynı anda (Pan ayarları ortada kalacak şekilde) açtığınızda, bu iki ses üst üste biner ve aradaki fark kadar, yani <strong>saniyede 1 kez (1 Hz)</strong> ritmik bir dalgalanma (nabız/vuruş) yaratır. 1 Hz, beynin derin uyku (Delta) frekansıdır. Bu ritmik vuruşlar beyni fiziksel olarak yavaşlamaya ve uykuya geçmeye teşvik eder.</p>
+            <h4>121 - 122 Hz Mantığı</h4>
+            <p><strong>121 Hz</strong> ve <strong>122 Hz</strong> frekansları aynı anda çalındığında, frekansların girişimi saniyede 1 kez (1 Hz) ritmik bir dalgalanma yaratır. 1 Hz, beynin derin uyku (Delta) frekans bandına denk gelir.</p>
 
-            <h4>Frekans Kombinasyonları ile Neler Yapılabilir?</h4>
+            <h4>Kombinasyon Örnekleri</h4>
             <ul>
-                <li><strong>1 Frekans (Saf Ton):</strong> Odaklanma veya ortam enerjisini dengeleme amacıyla tek bir frekans dinleyebilirsiniz. (Örn: Sakinleşmek için 432 Hz veya zihinsel netlik için 528 Hz).</li>
-                <li><strong>2 Frekans (Vuruş/Dalgalanma):</strong> Uyku ve derin rahatlama için en ideal moddur. (Örn: 121 Hz ve 122 Hz). Üst üste binen iki yakın frekans, beyninizi dinlendirecek net bir ritim oluşturur.</li>
-                <li><strong>3 Frekans (Harmonik Ortam):</strong> Daha zengin, müzikal veya meditatif bir doku yaratmak için kullanılır. (Örn: 200 Hz, 204 Hz ve 208 Hz). Bu sayede tekdüzelikten uzak, zihni oyalayan yumuşak bir uğultu elde edersiniz.</li>
-                <li><strong>4 Frekans (Gelişmiş Kombinasyon):</strong> Birden fazla etkiyi aynı anda yaşamak için kullanılır. Örneğin; uyku için alt planda 121+122 Hz çalışırken, üstüne fiziksel rahatlama hissi için 200+204 Hz'lik ikinci bir katman ekleyerek karmaşık ve son derece etkili bir ses mimarisi kurabilirsiniz.</li>
-            </ul>
-
-            <h4>Arka Plan Müzik Entegrasyonu</h4>
-            <p>Sistemin amacı bu frekansları günlük hayatınıza yedirmektir. Çıplak frekans dinlemek zorunda değilsiniz. Alt kısma dilediğiniz her türlü ses dosyasını yükleyebilirsiniz:</p>
-            <ul>
-                <li><strong>Müzik ve Şarkılar:</strong> En sevdiğiniz şarkılar, Spotify'dan indirdiğiniz bir lofi hip-hop parçası veya klasik müzik.</li>
-                <li><strong>Uyku ve Bebekler:</strong> Ninniler, okunan bir masal, beyaz gürültü (white noise) veya rahatlatıcı podcast kayıtları.</li>
-                <li><strong>Doğa Sesleri:</strong> Şömine çıtırtısı, şiddetli yağmur, okyanus dalgası veya orman sesleri.</li>
+                <li><strong>1 Frekans:</strong> Odaklanma amacıyla tek bir ton dinletisi.</li>
+                <li><strong>2 Frekans:</strong> Uyku ve derin rahatlama için ritmik dalgalanma. (Örn: 121 Hz ve 122 Hz).</li>
+                <li><strong>3 Frekans:</strong> Daha zengin bir harmonik ortam. (Örn: 200 Hz, 204 Hz ve 208 Hz).</li>
             </ul>
         </div>
     </details>
@@ -81,10 +72,10 @@
     <button onclick="addOscRow()" style="width: 100%; margin-bottom: 20px; background: #444;">+ Yeni Frekans Ekle</button>
 
     <div class="file-section">
-        <label style="margin-bottom: 10px;">Arka Plan Müzik Dosyası (İsteğe Bağlı)</label>
+        <label style="margin-bottom: 10px;">Arka Plan Sesi</label>
         <input type="file" id="audio-file" accept="audio/*" style="width: 100%; box-sizing: border-box; margin-bottom: 15px;">
         <div style="display: flex; align-items: center; gap: 10px;">
-            <label class="label-inline">Müzik Sesi:</label>
+            <label class="label-inline">Ses Seviyesi:</label>
             <div class="slider-wrapper">
                 <input type="range" id="file-vol" min="0" max="100" value="80" oninput="updateLiveVolume(this)">
                 <div class="ticks"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
@@ -98,17 +89,17 @@
             <input type="number" id="duration" value="210" style="width: 100%; box-sizing: border-box;">
         </div>
         <div style="flex: 2; display: flex; align-items: flex-end; gap: 5px;">
-            <button id="play-btn" onclick="play()">OYNAT</button>
-            <button id="stop-btn" onclick="stop()">DURDUR</button>
+            <button id="play-btn" onclick="play()">Oynat</button>
+            <button id="stop-btn" onclick="stop()">Durdur</button>
         </div>
     </div>
 
-    <button id="download-btn" onclick="downloadMP3()">STEREO MP3 OLARAK İNDİR</button>
+    <button id="download-btn" onclick="downloadMP3()">Dışa Aktar (MP3)</button>
     <div id="log" class="status-panel">Sistem hazır.</div>
     
     <div style="text-align: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid #333; font-size: 12px; color: #777;">
         Geliştirici: Furkan Karslı | Mekatronik Mühendisi<br>
-        <a href="https://linkedin.com/in/furkankarsli" target="_blank" style="color: #3498db; text-decoration: none; margin-top: 5px; display: inline-block;">LinkedIn Profilimden Bana Ulaşabilir ve Deneyimlerinizi Paylaşabilirsiniz</a>
+        <a href="https://linkedin.com/in/furkankarsli" target="_blank" style="color: #3498db; text-decoration: none; margin-top: 5px; display: inline-block;">LinkedIn İletişim</a>
     </div>
 </div>
 
@@ -152,14 +143,14 @@
                 <button class="remove-btn" onclick="this.parentElement.parentElement.remove()">Sil</button>
             </div>
             <div class="row-bottom">
-                <label class="label-inline">Ses Seviyesi:</label>
+                <label class="label-inline">Kanal Sesi:</label>
                 <div class="slider-wrapper">
                     <input type="range" class="vol" min="0" max="100" value="${defaultVol}" oninput="updateLiveVolume(this)">
                     <div class="ticks"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
                 </div>
             </div>
             <div class="row-bottom">
-                <label class="label-inline">Sol - Sağ:</label>
+                <label class="label-inline">Yön (Pan):</label>
                 <div class="slider-wrapper">
                     <input type="range" class="pan pan-slider" min="-1" max="1" step="0.01" value="${defaultPan}" oninput="updateLivePan(this)">
                     <div class="ticks"><span>Sol</span><span>Orta</span><span>Sağ</span></div>
@@ -188,24 +179,30 @@
         const file = e.target.files[0];
         if (!file) return;
         updateLog("Dosya işleniyor...");
-        const reader = new FileReader();
-        reader.onload = async (ev) => {
-            const tempCtx = new (window.AudioContext || window.webkitAudioContext)();
-            fileBuffer = await tempCtx.decodeAudioData(ev.target.result);
-            document.getElementById('duration').value = Math.ceil(fileBuffer.duration);
-            updateLog("Dosya yüklendi: " + file.name);
-        };
-        reader.readAsArrayBuffer(file);
+        try {
+            const reader = new FileReader();
+            reader.onload = async (ev) => {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') await audioCtx.resume();
+                
+                fileBuffer = await audioCtx.decodeAudioData(ev.target.result);
+                document.getElementById('duration').value = Math.ceil(fileBuffer.duration);
+                updateLog("Dosya yüklendi.");
+            };
+            reader.readAsArrayBuffer(file);
+        } catch (err) {
+            updateLog("Dosya okuma hatası.");
+        }
     };
 
-    function generateFileName(duration) {
-        const d = new Date();
-        const yy = String(d.getFullYear()).slice(-2);
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const dd = String(d.getDate()).padStart(2, '0');
-        const hh = String(d.getHours()).padStart(2, '0');
-        const min = String(d.getMinutes()).padStart(2, '0');
-        return `sentez_${yy}${mm}${dd}_${hh}${min}_${duration}.mp3`;
+    function setupLimiter(context) {
+        const limiter = context.createDynamicsCompressor();
+        limiter.threshold.value = -1.0; 
+        limiter.knee.value = 0.0;       
+        limiter.ratio.value = 20.0;     
+        limiter.attack.value = 0.002;   
+        limiter.release.value = 0.100;  
+        return limiter;
     }
 
     async function play() {
@@ -219,40 +216,30 @@
             analyser.fftSize = 2048; 
             
             const numSources = document.querySelectorAll('.row').length + (fileBuffer ? 1 : 0);
-            const safeGainValue = 0.85 / Math.max(1, numSources); 
+            const dynamicHeadroom = 1.0 / Math.max(1, numSources);
+            
+            const limiter = setupLimiter(audioCtx);
             
             masterGainNode = audioCtx.createGain();
             masterGainNode.gain.setValueAtTime(0, audioCtx.currentTime); 
             
-            const dcBlocker = audioCtx.createBiquadFilter();
-            dcBlocker.type = 'highpass';
-            dcBlocker.frequency.value = 25; 
-
-            const peakLimiter = audioCtx.createDynamicsCompressor();
-            peakLimiter.threshold.value = -3;
-            peakLimiter.knee.value = 5;
-            peakLimiter.ratio.value = 20;
-            peakLimiter.attack.value = 0.005;
-            peakLimiter.release.value = 0.1;
-
-            masterGainNode.connect(dcBlocker);
-            dcBlocker.connect(peakLimiter);
-            peakLimiter.connect(analyser);
+            masterGainNode.connect(limiter);
+            limiter.connect(analyser);
             analyser.connect(audioCtx.destination);
 
-            const now = audioCtx.currentTime;
-
+            const startTime = audioCtx.currentTime + 0.05; 
             const rows = document.querySelectorAll('.row');
+
             rows.forEach(row => {
                 const osc = audioCtx.createOscillator();
                 osc.type = row.querySelector('.type').value;
-                osc.frequency.setValueAtTime(parseFloat(row.querySelector('.freq').value), now);
+                osc.frequency.setValueAtTime(parseFloat(row.querySelector('.freq').value), startTime);
                 
                 const gainNode = audioCtx.createGain();
                 const targetVol = row.querySelector('.vol').value / 100;
                 
-                gainNode.gain.setValueAtTime(0, now);
-                gainNode.gain.linearRampToValueAtTime(targetVol, now + 0.1); 
+                gainNode.gain.setValueAtTime(0, startTime);
+                gainNode.gain.linearRampToValueAtTime(targetVol, startTime + 0.5);
                 row.querySelector('.vol').gainNode = gainNode;
 
                 const pannerNode = audioCtx.createStereoPanner();
@@ -264,7 +251,7 @@
                 gainNode.connect(pannerNode);
                 pannerNode.connect(masterGainNode); 
                 
-                osc.start(now);
+                osc.start(startTime);
                 activeSources.push(osc);
             });
 
@@ -275,24 +262,25 @@
                 const fileGain = audioCtx.createGain();
                 const targetFileVol = document.getElementById('file-vol').value / 100;
                 
-                fileGain.gain.setValueAtTime(0, now);
-                fileGain.gain.linearRampToValueAtTime(targetFileVol, now + 0.1);
+                fileGain.gain.setValueAtTime(0, startTime);
+                fileGain.gain.linearRampToValueAtTime(targetFileVol, startTime + 0.5);
                 document.getElementById('file-vol').gainNode = fileGain;
 
                 source.connect(fileGain);
                 fileGain.connect(masterGainNode); 
-                source.start(now);
+                source.start(startTime);
                 activeSources.push(source);
             }
 
-            masterGainNode.gain.setValueAtTime(0, now);
-            masterGainNode.gain.linearRampToValueAtTime(safeGainValue, now + 0.1);
+            masterGainNode.gain.setValueAtTime(0, startTime);
+            masterGainNode.gain.linearRampToValueAtTime(dynamicHeadroom, startTime + 0.5);
 
             isPlaying = true;
-            updateLog("Stereo ses üretiliyor...");
+            updateLog("Oynatılıyor.");
             draw();
         } catch (err) {
-            updateLog("Hata: " + err.message);
+            updateLog("Oynatma hatası.");
+            console.error(err);
         }
     }
 
@@ -303,7 +291,7 @@
             const now = audioCtx.currentTime;
             masterGainNode.gain.cancelScheduledValues(now);
             masterGainNode.gain.setValueAtTime(masterGainNode.gain.value, now);
-            masterGainNode.gain.linearRampToValueAtTime(0, now + 0.1);
+            masterGainNode.gain.linearRampToValueAtTime(0, now + 0.3);
         }
 
         setTimeout(() => {
@@ -322,7 +310,7 @@
             ctx.stroke();
             
             updateLog("Durduruldu.");
-        }, 150);
+        }, 350);
     }
 
     function draw() {
@@ -331,7 +319,6 @@
 
         const bufferLength = analyser.frequencyBinCount;
         const dataArray = new Uint8Array(bufferLength);
-        
         analyser.getByteTimeDomainData(dataArray);
 
         ctx.fillStyle = '#050505';
@@ -347,12 +334,8 @@
         for (let i = 0; i < bufferLength; i++) {
             const v = dataArray[i] / 128.0;
             const y = v * (canvas.height / 2);
-
-            if (i === 0) {
-                ctx.moveTo(x, y);
-            } else {
-                ctx.lineTo(x, y);
-            }
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
             x += sliceWidth;
         }
 
@@ -362,33 +345,16 @@
 
     async function downloadMP3() {
         try {
-            updateLog("Yüksek Kalitede MP3 İşleniyor, lütfen bekleyin...");
-            await new Promise(resolve => setTimeout(resolve, 100));
+            updateLog("Dışa aktarılıyor...");
+            await new Promise(resolve => setTimeout(resolve, 50));
 
             const duration = parseFloat(document.getElementById('duration').value);
             const sampleRate = 44100;
             const offlineCtx = new OfflineAudioContext(2, sampleRate * duration, sampleRate);
 
-            const numSources = document.querySelectorAll('.row').length + (fileBuffer ? 1 : 0);
-            const safeGainValue = 0.85 / Math.max(1, numSources); 
-
             const offlineMasterGain = offlineCtx.createGain();
-            offlineMasterGain.gain.value = safeGainValue;
-
-            const dcBlocker = offlineCtx.createBiquadFilter();
-            dcBlocker.type = 'highpass';
-            dcBlocker.frequency.value = 25;
-
-            const peakLimiter = offlineCtx.createDynamicsCompressor();
-            peakLimiter.threshold.value = -3;
-            peakLimiter.knee.value = 5;
-            peakLimiter.ratio.value = 20;
-            peakLimiter.attack.value = 0.005;
-            peakLimiter.release.value = 0.1;
-
-            offlineMasterGain.connect(dcBlocker);
-            dcBlocker.connect(peakLimiter);
-            peakLimiter.connect(offlineCtx.destination);
+            offlineMasterGain.gain.value = 1.0;
+            offlineMasterGain.connect(offlineCtx.destination);
 
             const rows = document.querySelectorAll('.row');
             rows.forEach(row => {
@@ -400,8 +366,8 @@
                 const targetVol = row.querySelector('.vol').value / 100;
                 
                 gainNode.gain.setValueAtTime(0, 0);
-                gainNode.gain.linearRampToValueAtTime(targetVol, 0.1);
-                gainNode.gain.setValueAtTime(targetVol, Math.max(0.1, duration - 0.1));
+                gainNode.gain.linearRampToValueAtTime(targetVol, 0.5);
+                gainNode.gain.setValueAtTime(targetVol, Math.max(0, duration - 0.5));
                 gainNode.gain.linearRampToValueAtTime(0, duration);
 
                 const pannerNode = offlineCtx.createStereoPanner();
@@ -423,8 +389,8 @@
                 const targetFileVol = document.getElementById('file-vol').value / 100;
                 
                 fileGain.gain.setValueAtTime(0, 0);
-                fileGain.gain.linearRampToValueAtTime(targetFileVol, 0.1);
-                fileGain.gain.setValueAtTime(targetFileVol, Math.max(0.1, duration - 0.1));
+                fileGain.gain.linearRampToValueAtTime(targetFileVol, 0.5);
+                fileGain.gain.setValueAtTime(targetFileVol, Math.max(0, duration - 0.5));
                 fileGain.gain.linearRampToValueAtTime(0, duration);
 
                 source.connect(fileGain);
@@ -433,22 +399,31 @@
             }
 
             const renderedBuffer = await offlineCtx.startRendering();
+            const leftChannel = renderedBuffer.getChannelData(0);
+            const rightChannel = renderedBuffer.getChannelData(1);
             
+            let maxPeak = 0.0;
+            for (let i = 0; i < leftChannel.length; i++) {
+                const absL = Math.abs(leftChannel[i]);
+                const absR = Math.abs(rightChannel[i]);
+                if (absL > maxPeak) maxPeak = absL;
+                if (absR > maxPeak) maxPeak = absR;
+            }
+
+            const normalizeScale = maxPeak > 0 ? (0.95 / maxPeak) : 1.0;
+
             const mp3encoder = new lamejs.Mp3Encoder(2, sampleRate, 320);
             const mp3Data = [];
             const sampleBlockSize = 576;
-            
-            const leftChannel = renderedBuffer.getChannelData(0);
-            const rightChannel = renderedBuffer.getChannelData(1);
             
             const int16Left = new Int16Array(leftChannel.length);
             const int16Right = new Int16Array(rightChannel.length);
             
             for(let i = 0; i < leftChannel.length; i++) {
-                let l = Math.max(-1, Math.min(1, leftChannel[i]));
+                let l = leftChannel[i] * normalizeScale;
                 int16Left[i] = l < 0 ? l * 32768 : l * 32767;
                 
-                let r = Math.max(-1, Math.min(1, rightChannel[i]));
+                let r = rightChannel[i] * normalizeScale;
                 int16Right[i] = r < 0 ? r * 32768 : r * 32767;
             }
 
@@ -465,12 +440,16 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = generateFileName(duration);
+            
+            const d = new Date();
+            const ts = `${String(d.getFullYear()).slice(-2)}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}_${String(d.getHours()).padStart(2, '0')}${String(d.getMinutes()).padStart(2, '0')}`;
+            a.download = `sentez_${ts}.mp3`;
             a.click();
             
-            updateLog("İndirme başarılı: " + a.download);
+            updateLog("İşlem tamamlandı.");
         } catch (err) {
-            updateLog("İndirme Hatası: " + err.message);
+            updateLog("İşlem hatası.");
+            console.error(err);
         }
     }
 </script>
