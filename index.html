@@ -49,7 +49,7 @@
 <div class="card">
 
     <details class="guide">
-        <summary>📖 Kullanım Rehberi ve Frekans Mantığı (tıklayın)</summary>
+        <summary> Kullanım Rehberi ve Frekans Mantığı (tıklayın)</summary>
         <div class="guide-content">
             <h4>Bu Sistem Ne İşe Yarar?</h4>
             <p>Bu araç, farklı ses frekanslarını üst üste bindirerek günlük hayatınızı kolaylaştırmak; uykuya dalmak, odaklanmak, stresi azaltmak veya kendinize özel rahatlatıcı ses ortamları yaratmak için tasarlanmış bir frekans sentezleyicidir.</p>
@@ -59,18 +59,18 @@
 
             <h4>Frekans Kombinasyonları ile Neler Yapılabilir?</h4>
             <ul>
-                <li><strong>1 Frekans (Saf Ton):</strong> Odaklanma veya ortam enerjisini dengeleme amacıyla tek bir frekans dinleyebilirsiniz.</li>
-                <li><strong>2 Frekans (Vuruş/Dalgalanma):</strong> Uyku ve derin rahatlama için en ideal moddur. (Örn: 121 Hz ve 122 Hz).</li>
-                <li><strong>3 Frekans (Harmonik Ortam):</strong> Daha zengin, müzikal veya meditatif bir doku yaratmak için kullanılır. (Örn: 200 Hz, 204 Hz ve 208 Hz).</li>
-                <li><strong>4 Frekans (Gelişmiş Kombinasyon):</strong> Örneğin; uyku için 121+122 Hz çalışırken, üstüne fiziksel rahatlama için 200+204 Hz ekleyebilirsiniz.</li>
+                <li><strong>1 Frekans (Saf Ton):</strong> Odaklanma veya ortam enerjisini dengeleme amacıyla tek bir frekans dinleyebilirsiniz. (Örn: Sakinleşmek için 432 Hz veya zihinsel netlik için 528 Hz).</li>
+                <li><strong>2 Frekans (Vuruş/Dalgalanma):</strong> Uyku ve derin rahatlama için en ideal moddur. (Örn: 121 Hz ve 122 Hz). Üst üste binen iki yakın frekans, beyninizi dinlendirecek net bir ritim oluşturur.</li>
+                <li><strong>3 Frekans (Harmonik Ortam):</strong> Daha zengin, müzikal veya meditatif bir doku yaratmak için kullanılır. (Örn: 200 Hz, 204 Hz ve 208 Hz). Bu sayede tekdüzelikten uzak, zihni oyalayan yumuşak bir uğultu elde edersiniz.</li>
+                <li><strong>4 Frekans (Gelişmiş Kombinasyon):</strong> Birden fazla etkiyi aynı anda yaşamak için kullanılır. Örneğin; uyku için alt planda 121+122 Hz çalışırken, üstüne fiziksel rahatlama hissi için 200+204 Hz'lik ikinci bir katman ekleyerek karmaşık ve son derece etkili bir ses mimarisi kurabilirsiniz.</li>
             </ul>
 
             <h4>Arka Plan Müzik Entegrasyonu</h4>
-            <p>Çıplak frekans dinlemek zorunda değilsiniz. Alt kısma dilediğiniz her türlü ses dosyasını yükleyebilirsiniz:</p>
+            <p>Sistemin amacı bu frekansları günlük hayatınıza yedirmektir. Çıplak frekans dinlemek zorunda değilsiniz. Alt kısma dilediğiniz her türlü ses dosyasını yükleyebilirsiniz:</p>
             <ul>
-                <li><strong>Müzik ve Şarkılar:</strong> Lofi hip-hop, klasik müzik vb.</li>
-                <li><strong>Uyku ve Bebekler:</strong> Ninniler, okunan bir masal, beyaz gürültü.</li>
-                <li><strong>Doğa Sesleri:</strong> Şömine çıtırtısı, yağmur, orman sesleri.</li>
+                <li><strong>Müzik ve Şarkılar:</strong> En sevdiğiniz şarkılar, Spotify'dan indirdiğiniz bir lofi hip-hop parçası veya klasik müzik.</li>
+                <li><strong>Uyku ve Bebekler:</strong> Ninniler, okunan bir masal, beyaz gürültü (white noise) veya rahatlatıcı podcast kayıtları.</li>
+                <li><strong>Doğa Sesleri:</strong> Şömine çıtırtısı, şiddetli yağmur, okyanus dalgası veya orman sesleri.</li>
             </ul>
         </div>
     </details>
@@ -208,17 +208,6 @@
         return `sentez_${yy}${mm}${dd}_${hh}${min}_${duration}.mp3`;
     }
 
-    // Kompresör fonksiyonunu geri getiriyoruz
-    function setupCompressor(context) {
-        const comp = context.createDynamicsCompressor();
-        comp.threshold.value = -12;
-        comp.knee.value = 30;
-        comp.ratio.value = 12;
-        comp.attack.value = 0.003;
-        comp.release.value = 0.25;
-        return comp;
-    }
-
     async function play() {
         if (isPlaying) return; 
 
@@ -229,15 +218,29 @@
             analyser = audioCtx.createAnalyser();
             analyser.fftSize = 2048; 
             
-            const compressor = setupCompressor(audioCtx);
+            // Güvenli Genlik Sınırı
+            const numSources = document.querySelectorAll('.row').length + (fileBuffer ? 1 : 0);
+            const safeGainValue = 0.85 / Math.max(1, numSources); 
             
             masterGainNode = audioCtx.createGain();
-            // Sesin patlamasını önlemek için 0'dan başlatıyoruz
             masterGainNode.gain.setValueAtTime(0, audioCtx.currentTime); 
             
-            // Yeni Ses Zinciri: MasterGain -> Compressor -> Analyser -> Destination
-            masterGainNode.connect(compressor);
-            compressor.connect(analyser);
+            // Yüksek Geçiren Filtre (DC Blocker) - 25 Hz altındaki cızırtı ve sapmaları keser
+            const dcBlocker = audioCtx.createBiquadFilter();
+            dcBlocker.type = 'highpass';
+            dcBlocker.frequency.value = 25; 
+
+            // Güvenlik Limitleyici - Sadece ani tepe noktalarını yakalar
+            const peakLimiter = audioCtx.createDynamicsCompressor();
+            peakLimiter.threshold.value = -3;
+            peakLimiter.knee.value = 0;
+            peakLimiter.ratio.value = 20;
+            peakLimiter.attack.value = 0.001;
+            peakLimiter.release.value = 0.1;
+
+            masterGainNode.connect(dcBlocker);
+            dcBlocker.connect(peakLimiter);
+            peakLimiter.connect(analyser);
             analyser.connect(audioCtx.destination);
 
             const now = audioCtx.currentTime;
@@ -252,7 +255,7 @@
                 const targetVol = row.querySelector('.vol').value / 100;
                 
                 gainNode.gain.setValueAtTime(0, now);
-                gainNode.gain.linearRampToValueAtTime(targetVol, now + 0.1);
+                gainNode.gain.setTargetAtTime(targetVol, now + 0.05, 0.1); // Üstel pürüzsüz açılış
                 row.querySelector('.vol').gainNode = gainNode;
 
                 const pannerNode = audioCtx.createStereoPanner();
@@ -276,7 +279,7 @@
                 const targetFileVol = document.getElementById('file-vol').value / 100;
                 
                 fileGain.gain.setValueAtTime(0, now);
-                fileGain.gain.linearRampToValueAtTime(targetFileVol, now + 0.1);
+                fileGain.gain.setTargetAtTime(targetFileVol, now + 0.05, 0.1);
                 document.getElementById('file-vol').gainNode = fileGain;
 
                 source.connect(fileGain);
@@ -285,11 +288,11 @@
                 activeSources.push(source);
             }
 
-            // Ana sesi kompresör olduğu için tam performansta (1.0) açabiliriz
-            masterGainNode.gain.linearRampToValueAtTime(1.0, now + 0.1);
+            // Ana sesi üstel (pürüzsüz) aç
+            masterGainNode.gain.setTargetAtTime(safeGainValue, now + 0.05, 0.1);
 
             isPlaying = true;
-            updateLog("Stereo ses üretiliyor (Kompresör aktif, sıfır cızırtı)...");
+            updateLog("Stereo ses üretiliyor...");
             draw();
         } catch (err) {
             updateLog("Hata: " + err.message);
@@ -303,7 +306,8 @@
             const now = audioCtx.currentTime;
             masterGainNode.gain.cancelScheduledValues(now);
             masterGainNode.gain.setValueAtTime(masterGainNode.gain.value, now);
-            masterGainNode.gain.linearRampToValueAtTime(0, now + 0.1);
+            // Kapanışı da üstel eğri ile pürüzsüz yap (Çıtlamayı önler)
+            masterGainNode.gain.setTargetAtTime(0, now, 0.05);
         }
 
         setTimeout(() => {
@@ -322,7 +326,7 @@
             ctx.stroke();
             
             updateLog("Durduruldu.");
-        }, 150);
+        }, 300);
     }
 
     function draw() {
@@ -369,13 +373,26 @@
             const sampleRate = 44100;
             const offlineCtx = new OfflineAudioContext(2, sampleRate * duration, sampleRate);
 
-            // İndirme işlemine de kompresör ekleniyor
-            const compressor = setupCompressor(offlineCtx);
+            const numSources = document.querySelectorAll('.row').length + (fileBuffer ? 1 : 0);
+            const safeGainValue = 0.85 / Math.max(1, numSources); 
+
             const offlineMasterGain = offlineCtx.createGain();
-            offlineMasterGain.gain.value = 1.0;
-            
-            offlineMasterGain.connect(compressor);
-            compressor.connect(offlineCtx.destination);
+            offlineMasterGain.gain.value = safeGainValue;
+
+            const dcBlocker = offlineCtx.createBiquadFilter();
+            dcBlocker.type = 'highpass';
+            dcBlocker.frequency.value = 25;
+
+            const peakLimiter = offlineCtx.createDynamicsCompressor();
+            peakLimiter.threshold.value = -3;
+            peakLimiter.knee.value = 0;
+            peakLimiter.ratio.value = 20;
+            peakLimiter.attack.value = 0.001;
+            peakLimiter.release.value = 0.1;
+
+            offlineMasterGain.connect(dcBlocker);
+            dcBlocker.connect(peakLimiter);
+            peakLimiter.connect(offlineCtx.destination);
 
             const rows = document.querySelectorAll('.row');
             rows.forEach(row => {
@@ -387,9 +404,8 @@
                 const targetVol = row.querySelector('.vol').value / 100;
                 
                 gainNode.gain.setValueAtTime(0, 0);
-                gainNode.gain.linearRampToValueAtTime(targetVol, 0.05);
-                gainNode.gain.setValueAtTime(targetVol, duration - 0.05);
-                gainNode.gain.linearRampToValueAtTime(0, duration);
+                gainNode.gain.setTargetAtTime(targetVol, 0.05, 0.1);
+                gainNode.gain.setTargetAtTime(0, Math.max(0, duration - 0.2), 0.1);
 
                 const pannerNode = offlineCtx.createStereoPanner();
                 pannerNode.pan.value = parseFloat(row.querySelector('.pan').value);
@@ -410,9 +426,8 @@
                 const targetFileVol = document.getElementById('file-vol').value / 100;
                 
                 fileGain.gain.setValueAtTime(0, 0);
-                fileGain.gain.linearRampToValueAtTime(targetFileVol, 0.05);
-                fileGain.gain.setValueAtTime(targetFileVol, duration - 0.05);
-                fileGain.gain.linearRampToValueAtTime(0, duration);
+                fileGain.gain.setTargetAtTime(targetFileVol, 0.05, 0.1);
+                fileGain.gain.setTargetAtTime(0, Math.max(0, duration - 0.2), 0.1);
 
                 source.connect(fileGain);
                 fileGain.connect(offlineMasterGain);
