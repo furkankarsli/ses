@@ -208,6 +208,17 @@
         return `sentez_${yy}${mm}${dd}_${hh}${min}_${duration}.mp3`;
     }
 
+    // Kompresör fonksiyonunu geri getiriyoruz
+    function setupCompressor(context) {
+        const comp = context.createDynamicsCompressor();
+        comp.threshold.value = -12;
+        comp.knee.value = 30;
+        comp.ratio.value = 12;
+        comp.attack.value = 0.003;
+        comp.release.value = 0.25;
+        return comp;
+    }
+
     async function play() {
         if (isPlaying) return; 
 
@@ -218,15 +229,15 @@
             analyser = audioCtx.createAnalyser();
             analyser.fftSize = 2048; 
             
-            // Kusursuz Matematiksel Headroom (Kompresörsüz, sıfır bozulma)
-            const numSources = document.querySelectorAll('.row').length + (fileBuffer ? 1 : 0);
-            const safeGainValue = 0.9 / Math.max(1, numSources); 
+            const compressor = setupCompressor(audioCtx);
             
             masterGainNode = audioCtx.createGain();
-            // Başlangıçta ana sesi 0 yapıyoruz ki aniden patlamasın
+            // Sesin patlamasını önlemek için 0'dan başlatıyoruz
             masterGainNode.gain.setValueAtTime(0, audioCtx.currentTime); 
             
-            masterGainNode.connect(analyser);
+            // Yeni Ses Zinciri: MasterGain -> Compressor -> Analyser -> Destination
+            masterGainNode.connect(compressor);
+            compressor.connect(analyser);
             analyser.connect(audioCtx.destination);
 
             const now = audioCtx.currentTime;
@@ -240,7 +251,6 @@
                 const gainNode = audioCtx.createGain();
                 const targetVol = row.querySelector('.vol').value / 100;
                 
-                // Her bir frekansı 0 sesten başlatıp 0.1 saniyede açıyoruz (Sıfır Noktası Çıtlamasını KÖKTEN çözer)
                 gainNode.gain.setValueAtTime(0, now);
                 gainNode.gain.linearRampToValueAtTime(targetVol, now + 0.1);
                 row.querySelector('.vol').gainNode = gainNode;
@@ -265,7 +275,6 @@
                 const fileGain = audioCtx.createGain();
                 const targetFileVol = document.getElementById('file-vol').value / 100;
                 
-                // Şarkıyı da yumuşak başlatıyoruz
                 fileGain.gain.setValueAtTime(0, now);
                 fileGain.gain.linearRampToValueAtTime(targetFileVol, now + 0.1);
                 document.getElementById('file-vol').gainNode = fileGain;
@@ -276,11 +285,11 @@
                 activeSources.push(source);
             }
 
-            // Ana sesi de yumuşak açıyoruz
-            masterGainNode.gain.linearRampToValueAtTime(safeGainValue, now + 0.1);
+            // Ana sesi kompresör olduğu için tam performansta (1.0) açabiliriz
+            masterGainNode.gain.linearRampToValueAtTime(1.0, now + 0.1);
 
             isPlaying = true;
-            updateLog("Stereo ses üretiliyor (Sıfır cızırtı modunda)...");
+            updateLog("Stereo ses üretiliyor (Kompresör aktif, sıfır cızırtı)...");
             draw();
         } catch (err) {
             updateLog("Hata: " + err.message);
@@ -290,7 +299,6 @@
     function stop() {
         if (!isPlaying) return;
 
-        // Oynatmayı durdurmadan önce sesi 0.1 saniyede yumuşakça kapatıyoruz (Çıt/Pıt yapmasın diye)
         if (masterGainNode && audioCtx) {
             const now = audioCtx.currentTime;
             masterGainNode.gain.cancelScheduledValues(now);
@@ -361,13 +369,13 @@
             const sampleRate = 44100;
             const offlineCtx = new OfflineAudioContext(2, sampleRate * duration, sampleRate);
 
-            // İndirme işleminde de matematikesel kusursuz sınırlandırıcı (Kompresör yok)
-            const numSources = document.querySelectorAll('.row').length + (fileBuffer ? 1 : 0);
-            const safeGainValue = 0.9 / Math.max(1, numSources); 
-
+            // İndirme işlemine de kompresör ekleniyor
+            const compressor = setupCompressor(offlineCtx);
             const offlineMasterGain = offlineCtx.createGain();
-            offlineMasterGain.gain.value = safeGainValue;
-            offlineMasterGain.connect(offlineCtx.destination);
+            offlineMasterGain.gain.value = 1.0;
+            
+            offlineMasterGain.connect(compressor);
+            compressor.connect(offlineCtx.destination);
 
             const rows = document.querySelectorAll('.row');
             rows.forEach(row => {
@@ -378,7 +386,6 @@
                 const gainNode = offlineCtx.createGain();
                 const targetVol = row.querySelector('.vol').value / 100;
                 
-                // İndirme esnasında başlangıç/bitiş çıtlamalarını kesmek için 50 ms fade in/out
                 gainNode.gain.setValueAtTime(0, 0);
                 gainNode.gain.linearRampToValueAtTime(targetVol, 0.05);
                 gainNode.gain.setValueAtTime(targetVol, duration - 0.05);
