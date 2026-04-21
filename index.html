@@ -23,7 +23,6 @@
         .row-bottom { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
         input[type="number"], select, button { background: #333; color: #fff; border: 1px solid #555; padding: 10px; border-radius: 6px; font-size: 15px; outline: none; }
         
-        /* Slider Wrapper ve Ticks (Ölçekler) */
         .slider-wrapper { display: flex; flex-direction: column; flex: 1; }
         .ticks { display: flex; justify-content: space-between; padding: 0 7px; font-size: 10px; color: #888; margin-top: 2px; }
         .ticks span { position: relative; display: flex; justify-content: center; width: 1px; }
@@ -120,6 +119,7 @@
     let fileBuffer = null;
     let isPlaying = false;
     let animationId;
+    let masterGainNode = null; // Genel sesi yöneteceğimiz değişken
 
     const canvas = document.getElementById('visualizer');
     const ctx = canvas.getContext('2d');
@@ -137,7 +137,6 @@
 
     function updateLog(msg) { log.innerText = msg; }
 
-    // Varsayılan frekanslar
     function addOscRow(defaultFreq = 122, defaultVol = 80, defaultPan = 0, defaultType = 'sine') {
         const div = document.createElement('div');
         div.className = 'row';
@@ -199,17 +198,6 @@
         reader.readAsArrayBuffer(file);
     };
 
-    // Kararlı, Müzikal Kompresör Ayarları (Eski sürümdeki gibi pürüzsüz)
-    function setupCompressor(context) {
-        const comp = context.createDynamicsCompressor();
-        comp.threshold.value = -12; 
-        comp.knee.value = 30;
-        comp.ratio.value = 12;
-        comp.attack.value = 0.003;
-        comp.release.value = 0.25;
-        return comp;
-    }
-
     function generateFileName(duration) {
         const d = new Date();
         const yy = String(d.getFullYear()).slice(-2);
@@ -221,23 +209,23 @@
     }
 
     async function play() {
+        if (isPlaying) return; // Zaten çalıyorsa tekrar basmayı engelle
+
         try {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (audioCtx.state === 'suspended') await audioCtx.resume();
-            
-            stop();
 
             analyser = audioCtx.createAnalyser();
             analyser.fftSize = 2048; 
             
-            const compressor = setupCompressor(audioCtx);
+            // Matematiksel Kusursuz Sınırlandırıcı (Kompresör iptal edildi)
+            const numSources = document.querySelectorAll('.row').length + (fileBuffer ? 1 : 0);
+            const safeGainValue = 0.9 / Math.max(1, numSources); // Asla 1.0 sınırını geçemez
             
-            // Dengeli Headroom (Eski kararlılığı sağlamak için)
-            const masterGain = audioCtx.createGain();
-            masterGain.gain.value = 0.5; 
+            masterGainNode = audioCtx.createGain();
+            masterGainNode.gain.setValueAtTime(0, audioCtx.currentTime); // Sıfır sesten başlat (Patlama önleyici)
             
-            masterGain.connect(compressor);
-            compressor.connect(analyser);
+            masterGainNode.connect(analyser);
             analyser.connect(audioCtx.destination);
 
             const rows = document.querySelectorAll('.row');
@@ -258,7 +246,7 @@
 
                 osc.connect(gainNode);
                 gainNode.connect(pannerNode);
-                pannerNode.connect(masterGain); 
+                pannerNode.connect(masterGainNode); 
                 
                 osc.start();
                 activeSources.push(osc);
@@ -274,10 +262,13 @@
                 fileSlider.gainNode = fileGain;
 
                 source.connect(fileGain);
-                fileGain.connect(masterGain); 
+                fileGain.connect(masterGainNode); 
                 source.start();
                 activeSources.push(source);
             }
+
+            // Oynatıldığında sesi yumuşakça (0.1 saniyede) aç (Fade-In)
+            masterGainNode.gain.linearRampToValueAtTime(safeGainValue, audioCtx.currentTime + 0.1);
 
             isPlaying = true;
             updateLog("Stereo ses üretiliyor...");
@@ -288,24 +279,36 @@
     }
 
     function stop() {
-        activeSources.forEach(s => { try { s.stop(); } catch(e) {} });
-        activeSources = [];
-        isPlaying = false;
-        cancelAnimationFrame(animationId);
-        
-        ctx.fillStyle = '#050505';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = '#333';
-        ctx.beginPath();
-        ctx.moveTo(0, canvas.height / 2);
-        ctx.lineTo(canvas.width, canvas.height / 2);
-        ctx.stroke();
-        
-        updateLog("Durduruldu.");
+        if (!isPlaying) return;
+
+        // Sesi aniden kesmek yerine 0.1 saniyede yumuşakça kıs (Fade-Out Çıtlamayı Önler)
+        if (masterGainNode && audioCtx) {
+            const now = audioCtx.currentTime;
+            masterGainNode.gain.cancelScheduledValues(now);
+            masterGainNode.gain.setValueAtTime(masterGainNode.gain.value, now);
+            masterGainNode.gain.linearRampToValueAtTime(0, now + 0.1);
+        }
+
+        // Ses kısıldıktan hemen sonra düğümleri kapat
+        setTimeout(() => {
+            activeSources.forEach(s => { try { s.stop(); } catch(e) {} });
+            activeSources = [];
+            isPlaying = false;
+            cancelAnimationFrame(animationId);
+            
+            ctx.fillStyle = '#050505';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#333';
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height / 2);
+            ctx.lineTo(canvas.width, canvas.height / 2);
+            ctx.stroke();
+            
+            updateLog("Durduruldu.");
+        }, 150);
     }
 
-    // Osiloskop Görselleştirici
     function draw() {
         if (!isPlaying || !analyser) return;
         animationId = requestAnimationFrame(draw);
@@ -341,26 +344,22 @@
         ctx.stroke();
     }
 
-    // Stabil MP3 İndirme Fonksiyonu
     async function downloadMP3() {
         try {
             updateLog("Yüksek Kalitede MP3 İşleniyor, lütfen bekleyin...");
-            
-            // Tarayıcının donmaması için kısa bir bekleme süresi
             await new Promise(resolve => setTimeout(resolve, 100));
 
             const duration = parseFloat(document.getElementById('duration').value);
             const sampleRate = 44100;
-            
-            // Çevrimdışı işleyiciyi Stereo (2 kanal) olarak kuruyoruz
             const offlineCtx = new OfflineAudioContext(2, sampleRate * duration, sampleRate);
 
-            const compressor = setupCompressor(offlineCtx);
-            const masterGain = offlineCtx.createGain();
-            masterGain.gain.value = 0.5; 
-            
-            masterGain.connect(compressor);
-            compressor.connect(offlineCtx.destination);
+            // İndirme işleminde de matematikesel kusursuz sınırlandırıcı
+            const numSources = document.querySelectorAll('.row').length + (fileBuffer ? 1 : 0);
+            const safeGainValue = 0.9 / Math.max(1, numSources); 
+
+            const offlineMasterGain = offlineCtx.createGain();
+            offlineMasterGain.gain.value = safeGainValue;
+            offlineMasterGain.connect(offlineCtx.destination);
 
             const rows = document.querySelectorAll('.row');
             rows.forEach(row => {
@@ -376,7 +375,7 @@
 
                 osc.connect(gainNode);
                 gainNode.connect(pannerNode);
-                pannerNode.connect(masterGain);
+                pannerNode.connect(offlineMasterGain);
                 
                 osc.start(0);
                 osc.stop(duration);
@@ -390,13 +389,12 @@
                 fileGain.gain.value = document.getElementById('file-vol').value / 100;
 
                 source.connect(fileGain);
-                fileGain.connect(masterGain);
+                fileGain.connect(offlineMasterGain);
                 source.start(0);
             }
 
             const renderedBuffer = await offlineCtx.startRendering();
             
-            // 320 kbps Yüksek Kalite Stereo Kodlama
             const mp3encoder = new lamejs.Mp3Encoder(2, sampleRate, 320);
             const mp3Data = [];
             const sampleBlockSize = 576;
