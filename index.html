@@ -119,7 +119,7 @@
     let fileBuffer = null;
     let isPlaying = false;
     let animationId;
-    let masterGainNode = null; // Genel sesi yöneteceğimiz değişken
+    let masterGainNode = null; 
 
     const canvas = document.getElementById('visualizer');
     const ctx = canvas.getContext('2d');
@@ -209,7 +209,7 @@
     }
 
     async function play() {
-        if (isPlaying) return; // Zaten çalıyorsa tekrar basmayı engelle
+        if (isPlaying) return; 
 
         try {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -218,26 +218,32 @@
             analyser = audioCtx.createAnalyser();
             analyser.fftSize = 2048; 
             
-            // Matematiksel Kusursuz Sınırlandırıcı (Kompresör iptal edildi)
+            // Kusursuz Matematiksel Headroom (Kompresörsüz, sıfır bozulma)
             const numSources = document.querySelectorAll('.row').length + (fileBuffer ? 1 : 0);
-            const safeGainValue = 0.9 / Math.max(1, numSources); // Asla 1.0 sınırını geçemez
+            const safeGainValue = 0.9 / Math.max(1, numSources); 
             
             masterGainNode = audioCtx.createGain();
-            masterGainNode.gain.setValueAtTime(0, audioCtx.currentTime); // Sıfır sesten başlat (Patlama önleyici)
+            // Başlangıçta ana sesi 0 yapıyoruz ki aniden patlamasın
+            masterGainNode.gain.setValueAtTime(0, audioCtx.currentTime); 
             
             masterGainNode.connect(analyser);
             analyser.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
 
             const rows = document.querySelectorAll('.row');
             rows.forEach(row => {
                 const osc = audioCtx.createOscillator();
                 osc.type = row.querySelector('.type').value;
-                osc.frequency.setValueAtTime(parseFloat(row.querySelector('.freq').value), audioCtx.currentTime);
+                osc.frequency.setValueAtTime(parseFloat(row.querySelector('.freq').value), now);
                 
                 const gainNode = audioCtx.createGain();
-                const volSlider = row.querySelector('.vol');
-                gainNode.gain.value = volSlider.value / 100;
-                volSlider.gainNode = gainNode;
+                const targetVol = row.querySelector('.vol').value / 100;
+                
+                // Her bir frekansı 0 sesten başlatıp 0.1 saniyede açıyoruz (Sıfır Noktası Çıtlamasını KÖKTEN çözer)
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(targetVol, now + 0.1);
+                row.querySelector('.vol').gainNode = gainNode;
 
                 const pannerNode = audioCtx.createStereoPanner();
                 const panSlider = row.querySelector('.pan');
@@ -248,7 +254,7 @@
                 gainNode.connect(pannerNode);
                 pannerNode.connect(masterGainNode); 
                 
-                osc.start();
+                osc.start(now);
                 activeSources.push(osc);
             });
 
@@ -257,21 +263,24 @@
                 source.buffer = fileBuffer;
                 
                 const fileGain = audioCtx.createGain();
-                const fileSlider = document.getElementById('file-vol');
-                fileGain.gain.value = fileSlider.value / 100;
-                fileSlider.gainNode = fileGain;
+                const targetFileVol = document.getElementById('file-vol').value / 100;
+                
+                // Şarkıyı da yumuşak başlatıyoruz
+                fileGain.gain.setValueAtTime(0, now);
+                fileGain.gain.linearRampToValueAtTime(targetFileVol, now + 0.1);
+                document.getElementById('file-vol').gainNode = fileGain;
 
                 source.connect(fileGain);
                 fileGain.connect(masterGainNode); 
-                source.start();
+                source.start(now);
                 activeSources.push(source);
             }
 
-            // Oynatıldığında sesi yumuşakça (0.1 saniyede) aç (Fade-In)
-            masterGainNode.gain.linearRampToValueAtTime(safeGainValue, audioCtx.currentTime + 0.1);
+            // Ana sesi de yumuşak açıyoruz
+            masterGainNode.gain.linearRampToValueAtTime(safeGainValue, now + 0.1);
 
             isPlaying = true;
-            updateLog("Stereo ses üretiliyor...");
+            updateLog("Stereo ses üretiliyor (Sıfır cızırtı modunda)...");
             draw();
         } catch (err) {
             updateLog("Hata: " + err.message);
@@ -281,7 +290,7 @@
     function stop() {
         if (!isPlaying) return;
 
-        // Sesi aniden kesmek yerine 0.1 saniyede yumuşakça kıs (Fade-Out Çıtlamayı Önler)
+        // Oynatmayı durdurmadan önce sesi 0.1 saniyede yumuşakça kapatıyoruz (Çıt/Pıt yapmasın diye)
         if (masterGainNode && audioCtx) {
             const now = audioCtx.currentTime;
             masterGainNode.gain.cancelScheduledValues(now);
@@ -289,7 +298,6 @@
             masterGainNode.gain.linearRampToValueAtTime(0, now + 0.1);
         }
 
-        // Ses kısıldıktan hemen sonra düğümleri kapat
         setTimeout(() => {
             activeSources.forEach(s => { try { s.stop(); } catch(e) {} });
             activeSources = [];
@@ -353,7 +361,7 @@
             const sampleRate = 44100;
             const offlineCtx = new OfflineAudioContext(2, sampleRate * duration, sampleRate);
 
-            // İndirme işleminde de matematikesel kusursuz sınırlandırıcı
+            // İndirme işleminde de matematikesel kusursuz sınırlandırıcı (Kompresör yok)
             const numSources = document.querySelectorAll('.row').length + (fileBuffer ? 1 : 0);
             const safeGainValue = 0.9 / Math.max(1, numSources); 
 
@@ -368,7 +376,13 @@
                 osc.frequency.setValueAtTime(parseFloat(row.querySelector('.freq').value), 0);
                 
                 const gainNode = offlineCtx.createGain();
-                gainNode.gain.value = row.querySelector('.vol').value / 100;
+                const targetVol = row.querySelector('.vol').value / 100;
+                
+                // İndirme esnasında başlangıç/bitiş çıtlamalarını kesmek için 50 ms fade in/out
+                gainNode.gain.setValueAtTime(0, 0);
+                gainNode.gain.linearRampToValueAtTime(targetVol, 0.05);
+                gainNode.gain.setValueAtTime(targetVol, duration - 0.05);
+                gainNode.gain.linearRampToValueAtTime(0, duration);
 
                 const pannerNode = offlineCtx.createStereoPanner();
                 pannerNode.pan.value = parseFloat(row.querySelector('.pan').value);
@@ -386,7 +400,12 @@
                 source.buffer = fileBuffer;
                 
                 const fileGain = offlineCtx.createGain();
-                fileGain.gain.value = document.getElementById('file-vol').value / 100;
+                const targetFileVol = document.getElementById('file-vol').value / 100;
+                
+                fileGain.gain.setValueAtTime(0, 0);
+                fileGain.gain.linearRampToValueAtTime(targetFileVol, 0.05);
+                fileGain.gain.setValueAtTime(targetFileVol, duration - 0.05);
+                fileGain.gain.linearRampToValueAtTime(0, duration);
 
                 source.connect(fileGain);
                 fileGain.connect(offlineMasterGain);
