@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Profesyonel Ses Sentezleyici</title>
+    <title>Profesyonel Ses ve Frekans Sentezleyici</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.all.min.js"></script>
     <style>
         body { font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #111; color: #eee; margin: 0; padding: 15px; overflow-x: hidden; }
@@ -60,18 +60,18 @@
 
             <h4>Frekans Kombinasyonları ile Neler Yapılabilir?</h4>
             <ul>
-                <li><strong>1 Frekans (Saf Ton):</strong> Odaklanma veya ortam enerjisini dengeleme amacıyla tek bir frekans dinleyebilirsiniz. (Örn: Sakinleşmek için 432 Hz veya zihinsel netlik için 528 Hz).</li>
-                <li><strong>2 Frekans (Vuruş/Dalgalanma):</strong> Uyku ve derin rahatlama için en ideal moddur. (Örn: 121 Hz ve 122 Hz). Üst üste binen iki yakın frekans, beyninizi dinlendirecek net bir ritim oluşturur.</li>
-                <li><strong>3 Frekans (Harmonik Ortam):</strong> Daha zengin, müzikal veya meditatif bir doku yaratmak için kullanılır. (Örn: 200 Hz, 204 Hz ve 208 Hz). Bu sayede tekdüzelikten uzak, zihni oyalayan yumuşak bir uğultu elde edersiniz.</li>
-                <li><strong>4 Frekans (Gelişmiş Kombinasyon):</strong> Birden fazla etkiyi aynı anda yaşamak için kullanılır. Örneğin; uyku için alt planda 121+122 Hz çalışırken, üstüne fiziksel rahatlama hissi için 200+204 Hz'lik ikinci bir katman ekleyerek karmaşık ve son derece etkili bir ses mimarisi kurabilirsiniz.</li>
+                <li><strong>1 Frekans (Saf Ton):</strong> Odaklanma veya ortam enerjisini dengeleme amacıyla tek bir frekans dinleyebilirsiniz.</li>
+                <li><strong>2 Frekans (Vuruş/Dalgalanma):</strong> Uyku ve derin rahatlama için en ideal moddur. (Örn: 121 Hz ve 122 Hz).</li>
+                <li><strong>3 Frekans (Harmonik Ortam):</strong> Daha zengin, müzikal veya meditatif bir doku yaratmak için kullanılır. (Örn: 200 Hz, 204 Hz ve 208 Hz).</li>
+                <li><strong>4 Frekans (Gelişmiş Kombinasyon):</strong> Örneğin; uyku için 121+122 Hz çalışırken, üstüne fiziksel rahatlama için 200+204 Hz ekleyebilirsiniz.</li>
             </ul>
 
             <h4>Arka Plan Müzik Entegrasyonu</h4>
-            <p>Sistemin amacı bu frekansları günlük hayatınıza yedirmektir. Çıplak frekans dinlemek zorunda değilsiniz. Alt kısma dilediğiniz her türlü ses dosyasını yükleyebilirsiniz:</p>
+            <p>Çıplak frekans dinlemek zorunda değilsiniz. Alt kısma dilediğiniz her türlü ses dosyasını yükleyebilirsiniz:</p>
             <ul>
-                <li><strong>Müzik ve Şarkılar:</strong> En sevdiğiniz şarkılar, Spotify'dan indirdiğiniz bir lofi hip-hop parçası veya klasik müzik.</li>
-                <li><strong>Uyku ve Bebekler:</strong> Ninniler, okunan bir masal, beyaz gürültü (white noise) veya rahatlatıcı podcast kayıtları.</li>
-                <li><strong>Doğa Sesleri:</strong> Şömine çıtırtısı, şiddetli yağmur, okyanus dalgası veya orman sesleri.</li>
+                <li><strong>Müzik ve Şarkılar:</strong> Lofi hip-hop, klasik müzik vb.</li>
+                <li><strong>Uyku ve Bebekler:</strong> Ninniler, okunan bir masal, beyaz gürültü.</li>
+                <li><strong>Doğa Sesleri:</strong> Şömine çıtırtısı, yağmur, orman sesleri.</li>
             </ul>
         </div>
     </details>
@@ -137,6 +137,7 @@
 
     function updateLog(msg) { log.innerText = msg; }
 
+    // Varsayılan frekanslar
     function addOscRow(defaultFreq = 122, defaultVol = 80, defaultPan = 0, defaultType = 'sine') {
         const div = document.createElement('div');
         div.className = 'row';
@@ -169,7 +170,6 @@
         document.getElementById('osc-list').appendChild(div);
     }
 
-    // Başlangıçta istenen varsayılan frekanslar
     addOscRow(122, 80, 0, 'sine');
     addOscRow(121, 80, 0, 'sine');
 
@@ -199,14 +199,14 @@
         reader.readAsArrayBuffer(file);
     };
 
-    // YENİ Brickwall Limiter Ayarları
+    // Kararlı, Müzikal Kompresör Ayarları (Eski sürümdeki gibi pürüzsüz)
     function setupCompressor(context) {
         const comp = context.createDynamicsCompressor();
-        comp.threshold.value = -24; // Çok daha erken devreye girer
-        comp.knee.value = 0;        // Keskin müdahale (Hard knee)
-        comp.ratio.value = 20;      // Tavanı aşan sesi maksimum oranda ezer (Brickwall)
-        comp.attack.value = 0.001;  // Saniyenin binde biri hızında anında tepki verir
-        comp.release.value = 0.1;   // Sesi hızlıca serbest bırakır
+        comp.threshold.value = -12; 
+        comp.knee.value = 30;
+        comp.ratio.value = 12;
+        comp.attack.value = 0.003;
+        comp.release.value = 0.25;
         return comp;
     }
 
@@ -232,9 +232,9 @@
             
             const compressor = setupCompressor(audioCtx);
             
-            // YENİ: Master Gain Headroom Değeri Düşürüldü
+            // Dengeli Headroom (Eski kararlılığı sağlamak için)
             const masterGain = audioCtx.createGain();
-            masterGain.gain.value = 0.25; // 0.45'ten 0.25'e düşürüldü. Toplam sinyal için devasa bir alan açıldı.
+            masterGain.gain.value = 0.5; 
             
             masterGain.connect(compressor);
             compressor.connect(analyser);
@@ -305,6 +305,7 @@
         updateLog("Durduruldu.");
     }
 
+    // Osiloskop Görselleştirici
     function draw() {
         if (!isPlaying || !analyser) return;
         animationId = requestAnimationFrame(draw);
@@ -340,20 +341,23 @@
         ctx.stroke();
     }
 
+    // Stabil MP3 İndirme Fonksiyonu
     async function downloadMP3() {
         try {
             updateLog("Yüksek Kalitede MP3 İşleniyor, lütfen bekleyin...");
+            
+            // Tarayıcının donmaması için kısa bir bekleme süresi
             await new Promise(resolve => setTimeout(resolve, 100));
 
             const duration = parseFloat(document.getElementById('duration').value);
             const sampleRate = 44100;
             
+            // Çevrimdışı işleyiciyi Stereo (2 kanal) olarak kuruyoruz
             const offlineCtx = new OfflineAudioContext(2, sampleRate * duration, sampleRate);
 
             const compressor = setupCompressor(offlineCtx);
-            
             const masterGain = offlineCtx.createGain();
-            masterGain.gain.value = 0.25; // Çevrimdışı render için de değer düşürüldü
+            masterGain.gain.value = 0.5; 
             
             masterGain.connect(compressor);
             compressor.connect(offlineCtx.destination);
@@ -392,6 +396,7 @@
 
             const renderedBuffer = await offlineCtx.startRendering();
             
+            // 320 kbps Yüksek Kalite Stereo Kodlama
             const mp3encoder = new lamejs.Mp3Encoder(2, sampleRate, 320);
             const mp3Data = [];
             const sampleBlockSize = 576;
